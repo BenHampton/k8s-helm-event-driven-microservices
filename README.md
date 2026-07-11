@@ -1,0 +1,1 @@
+curl -G https://start.spring.io/starter.tgz -d type=maven-project -d language=java -d javaVersion=21 -d packaging=jar -d groupId=com.k8sdemo -d artifactId=order-service -d name=order-service -d packageName=com.k8sdemo.order -d dependencies=web,data-jpa,postgresql,amqp,actuator,validation,liquibase,lombok | tar -xzf -
