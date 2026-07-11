@@ -1,10 +1,12 @@
 server:
-  port: 8080
+  port: 8081
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:orders}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:notifications}
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:password}
+  liquibase:
+    enabled: true
   rabbitmq:
     host: localhost
     port: 5672
@@ -15,4 +17,4 @@ spring:
 
 logging:
   level:
-    com.k8sdemo.order: DEBUG
+    com.k8sdemo.notification: DEBUG

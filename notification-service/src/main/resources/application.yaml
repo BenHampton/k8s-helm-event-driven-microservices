@@ -2,7 +2,7 @@ server:
   port: 8080
 spring:
   application:
-    name: order-service
+    name: notification-service
   jpa:
     hibernate:
       ddl-auto: validate        # Liquibase owns the schema; Hibernate only validates
