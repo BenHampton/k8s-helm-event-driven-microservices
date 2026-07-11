@@ -3,44 +3,29 @@ spring:
     name: order-service
   jpa:
     hibernate:
-      ddl-auto: validate      # Liquibase owns the schema; Hibernate only validates
-    properties:
-      hibernate.jdbc.time_zone: UTC
+      ddl-auto: validate        # Liquibase owns the schema; Hibernate only validates
+    open-in-view: false
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+  # RabbitMQ *behavior* is identical in every environment, so it lives here.
+  # Only the connection + credentials differ per profile (below).
   rabbitmq:
     listener:
       simple:
-        acknowledge-mode: auto     # ack on normal return, reject on exception
+        acknowledge-mode: auto
         retry:
-          enabled: true            # retry failed deliveries...
+          enabled: true
           initial-interval: 1s
-          max-attempts: 4          # ...4 times with backoff...
-          multiplier: 2.0          # 1s, 2s, 4s
-          # after max-attempts, the message is dead-lettered to the DLQ.
+          max-attempts: 4
+          multiplier: 2.0
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus   # actuator endpoints for k8s + monitoring
+        include: health,info,prometheus
   endpoint:
     health:
       probes:
-        enabled: true            # exposes /actuator/health/liveness + /readiness
-
----
-# Profile used when running in Kubernetes: read config from the environment.
-spring:
-  config:
-    activate:
-      on-profile: k8s
-  datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
-  rabbitmq:
-    host: ${RABBITMQ_HOST}
-    port: ${RABBITMQ_PORT}
-    username: ${RABBITMQ_USER}
-    password: ${RABBITMQ_PASSWORD}
+        enabled: true

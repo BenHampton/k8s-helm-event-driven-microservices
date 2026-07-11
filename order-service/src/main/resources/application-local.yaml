@@ -1,22 +1,16 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/orders
-    username: postgres
-    password: password
-  liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-    enabled: true
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:password}
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
-    password: guest
-    listener:
-      simple:
-        acknowledge-mode: auto     # ack on normal return, reject on exception
-        retry:
-          enabled: true            # retry failed deliveries...
-          initial-interval: 1s
-          max-attempts: 4          # ...4 times with backoff...
-          multiplier: 2.0          # 1s, 2s, 4s
-          # after max-attempts, the message is dead-lettered to the DLQ.
+    password: guest            # local default — not a real secret
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.k8sdemo.order: DEBUG
