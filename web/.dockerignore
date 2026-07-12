@@ -1,6 +1,0 @@
-# web builds from source (multi-stage), so keep src/ — but never ship these:
-node_modules
-dist
-.git
-*.log
-.env*

@@ -1,7 +1,13 @@
 # Kubernetes Helm Event Driven Microservices
 
-# Start Locally
-- web
+## Prerequisites
+- install minikube
+  - enable addons:
+    - nginx ingress controller for the web UI: `minikube addons enable ingress` 
+    - for kubectl top + HPA later: `minikube addons enable metrics-server`
+
+## Start Locally
+- ui
   - `localhost:3000`
 - order-service
     - `localhost:8080`
@@ -17,7 +23,7 @@
 - Build Docker Files
   - `docker build -t order-service:0.1.0 ./order-service`
   - `docker build -t notification-service:0.1.0 ./notification-service`
-  - `docker build -t web:0.1.0 ./web`
+  - `docker build -t ui:0.1.0 ./ui`
 
 ## Docker Compose
 - build both service JARs (runs tests too):
@@ -25,3 +31,7 @@
   - `mvn -f notification-service/pom.xml clean package`
 - start up:
   - `docker compose up --build`
+
+## Minikube
+- start
+- `minikube start --cpus=4 --memory=6g --kubernetes-version=stable`

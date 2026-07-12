@@ -53,7 +53,7 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
     ports: ["8081:8080"]
 
-  web:
-    build: ./web
+  ui:
+    build: ./ui
     depends_on: [order-service]
     ports: ["3000:80"]            # nginx serves the built React app
