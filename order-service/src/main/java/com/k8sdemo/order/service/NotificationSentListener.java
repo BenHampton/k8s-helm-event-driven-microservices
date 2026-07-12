@@ -14,19 +14,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class NotificationSentListener {
 
-    private final OrderRepository orders;
+    private final OrderRepository orderRepository;
 
-    public NotificationSentListener(OrderRepository orders) {
-        this.orders = orders;
+    public NotificationSentListener(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
     }
 
     @Transactional
     @RabbitListener(queues = RabbitConfig.NOTIFICATION_SENT_QUEUE)
     public void onNotificationSent(NotificationSent event) {
-        OrderEntity order = orders.findById(event.orderId()).orElse(null);
+        OrderEntity order = orderRepository.findById(event.getOrderId()).orElse(null);
         if (order == null) {
             // Unknown order id: don't retry forever — log and drop (ack).
-            log.warn("NotificationSent for unknown order {}", event.orderId());
+            log.warn("NotificationSent for unknown order {}", event.getOrderId());
             return;
         }
         // Idempotent: if already NOTIFIED, a duplicate delivery is a no-op.
@@ -35,7 +35,7 @@ public class NotificationSentListener {
             return;
         }
         order.markNotified();
-        orders.save(order);
+        orderRepository.save(order);
         log.info("Order {} -> NOTIFIED", order.getId());
         // Normal return = success = message acked. Throwing would trigger
         // retry, then dead-letter after attempts are exhausted.
