@@ -1,0 +1,59 @@
+services:
+  orders-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orders"]
+      interval: 5s
+      retries: 5
+
+  notifications-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: notifications
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports: ["5433:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notifications"]
+      interval: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    ports:
+      - "5672:5672"               # AMQP
+      - "15672:15672"             # management UI - http://localhost:15672 (guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      retries: 5
+
+  order-service:
+    build: ./order-service
+    depends_on:
+      orders-db: { condition: service_healthy }
+      rabbitmq:  { condition: service_healthy }
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://orders-db:5432/orders
+      SPRING_RABBITMQ_HOST: rabbitmq
+    ports: ["8080:8080"]
+
+  notification-service:
+    build: ./notification-service
+    depends_on:
+      notifications-db: { condition: service_healthy }
+      rabbitmq:         { condition: service_healthy }
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://notifications-db:5432/notifications
+      SPRING_RABBITMQ_HOST: rabbitmq
+    ports: ["8081:8080"]
+
+  web:
+    build: ./web
+    depends_on: [order-service]
+    ports: ["3000:80"]            # nginx serves the built React app
