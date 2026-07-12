@@ -1,0 +1,6 @@
+# Slim image only needs target/*.jar — exclude everything else from the
+# build context so Docker doesn't tar up src/, .git, test output, etc.
+*
+!target
+target/*
+!target/*.jar
