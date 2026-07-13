@@ -1,0 +1,58 @@
+name: ui
+
+on:
+  push:
+    branches: [main]
+    paths: ['ui/**']
+  pull_request:
+    paths: ['ui/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ui-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/ui
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install & build
+        run: |
+          npm ci
+          npm run build                
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_SECRET }}
+
+      - name: Build & push image
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: ui
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
