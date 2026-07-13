@@ -6,6 +6,7 @@ on:
     paths: ['ui/**']
   pull_request:
     paths: ['ui/**']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -41,14 +42,14 @@ jobs:
           npm run build                
 
       - name: Log in to Docker Hub
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_SECRET }}
 
       - name: Build & push image
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v6
         with:
           context: ui
