@@ -5,9 +5,9 @@ metadata:
   namespace: data
 type: Opaque
 stringData:
-  POSTGRES_DB: notifications
-  POSTGRES_USER: notifications
-  POSTGRES_PASSWORD: notifications
+  POSTGRES_DB: "notifications"
+  POSTGRES_USER: "notifications"
+  POSTGRES_PASSWORD: "notifications"
 
 ---
 
@@ -17,7 +17,7 @@ metadata:
   name: notifications-db
   namespace: data
 spec:
-  serviceName: order-db
+  serviceName: notifications-db
   selector:
     matchLabels:
       app: notifications-db

@@ -53,3 +53,7 @@
   - the pipeline runs helm upgrade and imperatively changes the cluster.
 - Argo pulls and reconciles:
   - it watches Git and continuously forces the cluster to match. Crucially, Argo will revert anything it didn't do.
+
+## Helm
+- install into the dev namespace:
+  - helm install order-service ./order-service/helm -n dev

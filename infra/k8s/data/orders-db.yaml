@@ -5,9 +5,9 @@ metadata:
   namespace: data
 type: Opaque
 stringData:
-  POSTGRES_DB: orders
-  POSTGRES_USER: orders
-  POSTGRES_PASSWORD: orders
+  POSTGRES_DB: "orders"
+  POSTGRES_USER: "orders"
+  POSTGRES_PASSWORD: "orders"
 
 ---
 
@@ -17,7 +17,7 @@ metadata:
   name: orders-db
   namespace: data
 spec:
-  serviceName: order-db
+  serviceName: orders-db
   selector:
     matchLabels:
       app: orders-db
