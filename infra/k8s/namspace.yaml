@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev
+  labels:
+    environment: dev
+    # baseline Pod Security: permissive, for fast local iteratoin
+    pod-security.kubernetes.io/enforce: baseline
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+  labels:
+    environment: prod
+    # restricted Pod Security: prod is locked down
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data
+  labels:
+    tier: data
+    # stands in for "external, managed" data (RDS). Not an app environment
