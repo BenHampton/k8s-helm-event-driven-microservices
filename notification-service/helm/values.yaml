@@ -17,7 +17,7 @@ env:
   - name: JAVA_OPTS
     value: "-XX:MaxRAMPercentage=75.0"
   - name: DB_HOST
-    value: notifications-db   # its OWN database — never order-service's
+    value: notifications-db   # its OWN database — never notifications-service's
   - name: DB_PORT
     value: "5432"
   - name: DB_NAME
