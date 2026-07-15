@@ -7,10 +7,10 @@ profile: prod
 
 replicaCount: 3
 
+
+# An immutable tag: the exact SHA CI built and dev proved. Promotion IS the commit that changes this line.
 image:
-  # An immutable tag: the exact SHA CI built and dev proved. Promotion IS the
-  # commit that changes this line — see the note below.
-  tag: "737d8aa"
+  tag: "70cb112"
   pullPolicy: Always
 
 service:
