@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: order-service-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/BenHampton/k8s-helm-event-driven-microservices
+    targetRevision: main
+    path: order-service/helm
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-prod.yaml    # the prod overlay
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: prod
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
