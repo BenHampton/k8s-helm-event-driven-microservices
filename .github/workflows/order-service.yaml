@@ -35,6 +35,10 @@ jobs:
       - name: Build & Test
         run: mvn -B clean verify
 
+      - name: Short SHA
+        id: vars
+        run: echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
       # 2. Only on a push to main: PRs test but never publish.
       - name: Log in to Docker Hub
         if: github.event_name != 'pull_request'
@@ -47,8 +51,8 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v6
         with:
-          context: order-service                # target/app.jar already built above
+          context: order-service    # target/app.jar already built above
           push: true
           tags: |
             ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:${{ steps.vars.outputs.sha }}
