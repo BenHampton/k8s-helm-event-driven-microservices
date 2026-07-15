@@ -10,7 +10,7 @@ replicaCount: 3
 image:
   # An immutable tag: the exact SHA CI built and dev proved. Promotion IS the
   # commit that changes this line — see the note below.
-  tag: "f105ca167d39"
+  tag: "737d8aa"
   pullPolicy: Always
 
 service:
