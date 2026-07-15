@@ -5,7 +5,7 @@
 
 profile: prod
 
-replicaCount: 3
+replicaCount: 2
 
 
 # An immutable tag: the exact SHA CI built and dev proved. Promotion IS the commit that changes this line.

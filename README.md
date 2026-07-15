@@ -56,6 +56,9 @@
 ## Minikube
 - start
 - `minikube start --cpus=4 --memory=6g --kubernetes-version=stable`
+- `minikube start --cpus=4 --memory=7000 --kubernetes-version=stable`
+
+
 ---
 
 ## Helm
@@ -92,3 +95,16 @@
   - `-R`: recurses into the per-service subdirectories
 - verify
   - `k -n argocd get applications`
+
+---
+
+## Clean Up
+
+### Argo delete cascades, removes everything 
+- namespace: order-service, notification-service, ui — pods, Services, Secrets, all of it.
+```angular2html
+
+kubectl delete -f argocd/order-service/dev.yaml -f argocd/notification-service/dev.yaml -f argocd/ui/dev.yaml
+
+kubectl delete -f argocd/order-service/prod.yaml -f argocd/notification-service/prod.yaml -f argocd/ui/prod.yaml
+```
