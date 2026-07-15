@@ -1,0 +1,121 @@
+replicaCount: 1
+
+image:
+  repository: docker.io/bhampton29/notification-service
+  pullPolicy: IfNotPresent
+  tag: latest
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  type: ClusterIP
+  port: 8080
+
+# Spring profile + connection config, injected as env vars.
+env:
+  SPRING_PROFILES_ACTIVE: dev
+  JAVA_OPTS: "-XX:MaxRAMPercentage=75.0"
+  DB_HOST: notifications-db        # the ExternalName Service in THIS namespace
+  DB_PORT: "5432"
+  DB_NAME: notifications
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: "5672"
+
+# non-secret defaults above; secrets come from a Secret (below)
+secret:
+  DB_USER: notifications
+  DB_PASSWORD: notifications
+  RABBITMQ_USER: guest
+  RABBITMQ_PASSWORD: guest
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  create: false
+  automount: true
+  annotations: {}
+  name: ""
+
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities: { drop: [ "ALL" ] }
+  readOnlyRootFilesystem: true
+
+# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+# -- Expose the service via gateway-api HTTPRoute
+# Requires Gateway API resources and suitable controller installed within the cluster
+# (see: https://gateway-api.sigs.k8s.io/guides/)
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs:
+  - name: gateway
+    sectionName: http
+  hostnames:
+  - chart-example.local
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /headers
+
+resources: {}
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+volumes:
+  - name: tmp
+    emptyDir: {}
+
+volumeMounts:
+  - name: tmp
+    mountPath: /tmp
+
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
