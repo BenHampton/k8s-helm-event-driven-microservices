@@ -45,17 +45,7 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           env:
-            {{- range $k, $v := .Values.env }}
-            - name: {{ $k }}
-              value: {{ $v | quote }}
-              {{- end }}
-              {{- range $k, $v := .Values.secret }}
-            - name: {{ $k }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "..fullname" $ }}-secret
-                  key: {{ $k }}
-            {{- end }}
+            {{- tpl (toYaml .Values.env) . | nindent 12 }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}

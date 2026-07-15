@@ -1,65 +1,21 @@
-# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
+# An overlay, not a replacement: helm -f values.yaml -f values-prod.yaml merges
+# this ON TOP of the defaults. Only what actually differs in prod lives here —
+# anything absent (env, secret, probes, securityContext, volumes,
+# serviceAccount, ingress, httpRoute) is inherited unchanged from values.yaml.
 
-profile: dev
+profile: prod
+
+replicaCount: 3
 
 image:
-  repository: docker.io/bhampton29/order-service
-  pullPolicy: IfNotPresent
   tag: latest
+  pullPolicy: Always
 
 service:
   type: ClusterIP
   port: 8080
 
-env:
-  - name: SPRING_PROFILES_ACTIVE
-    value: "{{ .Values.profile }}"
-  - name: JAVA_OPTS
-    value: "-XX:MaxRAMPercentage=75.0"
-  - name: DB_HOST
-    value: orders-db        # the ExternalName Service in THIS namespace
-  - name: DB_PORT
-    value:  "5432"
-  - name: DB_NAME
-    value: orders
-  - name: RABBITMQ_HOST
-    value: rabbitmq
-  - name: RABBITMQ_PORT
-    value: "5672"
-  - name: DB_USER
-    valueFrom:
-      secretKeyRef:
-        name: order-service-secret
-        key: DB_USER
-  - name: DB_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: order-service-secret
-        key: DB_PASSWORD
-  - name: RABBITMQ_USER
-    valueFrom:
-      secretKeyRef:
-        name: order-service-secret
-        key: RABBITMQ_USER
-  - name: RABBITMQ_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: order-service-secret
-        key: RABBITMQ_PASSWORD
-
-# secret.yaml renders these into the
-# `order-service-secret` Secret the env list above reads from.
-# We are deploying to an internal minikube cluster that can not be reach out the outside.
-# Committing THESE is fine.
-secret:
-  DB_USER: orders
-  DB_PASSWORD: orders
-  RABBITMQ_USER: guest
-  RABBITMQ_PASSWORD: guest
-
 imagePullSecrets: []
-
 nameOverride: ""
 fullnameOverride: ""
 
@@ -104,23 +60,23 @@ httpRoute:
   enabled: false
   annotations: {}
   parentRefs:
-  - name: gateway
-    sectionName: http
+    - name: gateway
+      sectionName: http
   hostnames:
-  - chart-example.local
+    - chart-example.local
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /headers
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /headers
 
 resources:
   requests:
-    cpu: 100m
-    memory: 384Mi
-  limits:
-    cpu: 500m
+    cpu: 250m
     memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 768Mi
 
 livenessProbe:
   httpGet:

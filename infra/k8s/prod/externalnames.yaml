@@ -5,7 +5,7 @@ metadata:
   namespace: prod
 spec:
   type: ExternalName
-  externalName: orders-db.svc.cluster.local # RDS endpoint, e.g. orders.abc123.us-east-1.rds.amazonaws.com
+  externalName: orders-db.data.svc.cluster.local # RDS endpoint, e.g. orders.abc123.us-east-1.rds.amazonaws.com
 
 ---
 
