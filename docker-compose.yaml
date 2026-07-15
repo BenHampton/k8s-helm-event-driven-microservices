@@ -56,4 +56,4 @@ services:
   ui:
     build: ./ui
     depends_on: [order-service]
-    ports: ["3000:80"]            # nginx serves the built React app
+    ports: ["3000:8080"]         # nginx-unprivileged serves the built React app
