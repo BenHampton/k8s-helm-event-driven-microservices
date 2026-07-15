@@ -12,6 +12,19 @@
 - start up `minikube`
   - `minikube start --cpus=4 --memory=6g --kubernetes-version=stable`
 
+### Port-Forward
+- ui
+  - `n dev port-forward svc/ui 8081:8080`
+- order-service
+  - `k -n dev port-forward svc/order-service 8080:8080`
+- notification-service
+  - `-n dev port-forward svc/notification-service 8082:8080`
+
+- argo ui
+  - `k port-forward -n argocd svc/argocd-server 8090:443`
+- grafana
+  - `k -n monitoring port-forward svc/monitoring-grafana 3001:80`
+
 ---
 
 ## Start Locally

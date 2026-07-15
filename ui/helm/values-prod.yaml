@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  tag: "c2e5bcc"
+  tag: "6ba828a"
   pullPolicy: Always
 
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
