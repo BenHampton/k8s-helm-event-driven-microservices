@@ -10,7 +10,7 @@
 
 ## Demo
 - start up `minikube`
-  - `minikube start --cpus=4 --memory=6g --kubernetes-version=stable`
+- port-forward UI
 
 ### Port-Forward
 - ui
@@ -25,9 +25,7 @@
 - grafana
   - `k -n monitoring port-forward svc/monitoring-grafana 3001:80`
 
----
-
-## Start Locally
+### Start Locally
 - start apps
   - `docker compose` or `locally`
 
@@ -68,7 +66,6 @@
 
 ## Minikube
 - start
-- `minikube start --cpus=4 --memory=6g --kubernetes-version=stable`
 - `minikube start --cpus=4 --memory=7000 --kubernetes-version=stable`
 
 

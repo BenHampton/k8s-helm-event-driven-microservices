@@ -91,11 +91,22 @@ autoscaling:
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
 
-# Additional volumes on the output Deployment definition.
-volumes: []
+volumes:
+  - name: tmp
+    emptyDir: {}
+  - name: cache
+    emptyDir: {}
+  - name: run
+    emptyDir: {}
 
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
+volumeMounts:
+  - name: tmp
+    mountPath: /tmp
+  - name: cache
+    mountPath: /var/cache/nginx
+  - name: run
+    mountPath: /var/run
+
 
 nodeSelector: {}
 
