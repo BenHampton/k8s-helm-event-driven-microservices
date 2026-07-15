@@ -10,6 +10,7 @@ spec:
     targetRevision: main
     path: order-service/helm
     helm:
+      releaseName: order-service
       valueFiles:
         - values.yaml
         - values-prod.yaml    # the prod overlay
@@ -17,4 +18,6 @@ spec:
     server: https://kubernetes.default.svc
     namespace: prod
   syncPolicy:
-    automated: { prune: true, selfHeal: true }
+    automated:
+      prune: true
+      selfHeal: true

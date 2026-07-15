@@ -9,6 +9,8 @@ spec:
     repoURL: https://github.com/BenHampton/k8s-helm-event-driven-microservices
     targetRevision: main
     path: notification-service/helm    # location of helm charts
+    helm:
+      releaseName: notification-service
   destination:
     server: https://kubernetes.default.svc
     namespace: dev

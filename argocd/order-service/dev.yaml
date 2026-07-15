@@ -9,6 +9,8 @@ spec:
     repoURL: https://github.com/BenHampton/k8s-helm-event-driven-microservices
     targetRevision: main
     path: order-service/helm    # location of helm charts
+    helm:
+      releaseName: order-service
   destination:
     server: https://kubernetes.default.svc
     namespace: dev

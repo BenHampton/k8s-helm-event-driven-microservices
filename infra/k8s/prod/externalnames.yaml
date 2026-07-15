@@ -1,18 +1,18 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: order-db # name order-service connects to
+  name: orders-db    # name order-service connects to
   namespace: prod
 spec:
   type: ExternalName
-  externalName: orders-db.data.svc.cluster.local # RDS endpoint, e.g. orders.abc123.us-east-1.rds.amazonaws.com
+  externalName: orders-db.data.svc.cluster.local   # RDS endpoint, e.g. orders.abc123.us-east-1.rds.amazonaws.com
 
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: notification-db
+  name: notifications-db
   namespace: prod
 spec:
   type: ExternalName

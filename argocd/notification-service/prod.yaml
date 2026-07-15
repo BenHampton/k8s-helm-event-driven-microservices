@@ -10,6 +10,7 @@ spec:
     targetRevision: main
     path: notification-service/helm
     helm:
+      releaseName: notification-service
       valueFiles:
         - values.yaml
         - values-prod.yaml    # the prod overlay
