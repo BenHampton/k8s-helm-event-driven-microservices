@@ -30,13 +30,13 @@ Argo CD reconciles everything from Git, so the cluster is whatever the repo says
 
 ```ignorelang
 k8s-helm-event-driven-microservices/
-├── docker-compose.yml          # local dev: all services + rabbit + postgres
+├── docker-compose.yml                  # local dev: all services + rabbit + postgres
 ├── README.md
-├── .github/workflows/           # ── all CI lives at the repo ROOT ──
-│   ├── order-service.yml        # path-filtered to order-service/**
-│   ├── notification-service.yml # path-filtered to notification-service/**
-│   └── ui.yml                   # path-filtered to ui/**
-├── order-service/               # ── standalone microservice ──
+├── .github/workflows/                  # ── all CI lives at the repo ROOT ──
+│   ├── order-service.yml               # path-filtered to order-service/**
+│   ├── notification-service.yml        # path-filtered to notification-service/**
+│   └── ui.yml                          # path-filtered to ui/**
+├── order-service/                      # ── standalone microservice ──
 │   ├── pom.xml
 │   ├── mvnw, mvnw.cmd, .mvn/
 │   ├── Dockerfile               
@@ -46,20 +46,20 @@ k8s-helm-event-driven-microservices/
 │   │   ├── application-local.yaml
 │   │   ├── application-dev.yaml
 │   │   ├── application-prod.yaml
-│   │   └── db/changelog/        # Liquibase changelogs
-│   └── helm/                    # its OWN chart
-├── notification-service/        # ── standalone microservice ──
+│   │   └── db/changelog/               # Liquibase changelogs
+│   └── helm/                           # its OWN chart
+├── notification-service/               # ── standalone microservice ──
 │   └── (same shape as order-service)
-├── ui/                          # ── standalone microservice ──
+├── ui/                                 # ── standalone microservice ──
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── src/
-│   ├── Dockerfile               # multi-stage: node build -> nginx
+│   ├── Dockerfile                      # multi-stage: node build -> nginx
 │   └── helm/
-├── infra/                       # ── cluster setup: raw manifests you kubectl apply ──
+├── infra/                              # ── cluster setup: raw manifests you kubectl apply ──
 │   └── k8s/
-│       ├── namespaces.yaml      # dev / prod / data namespaces + labels
-│       ├── data/                # backing services (stands in for RDS + Amazon MQ)
+│       ├── namespaces.yaml             # dev / prod / data namespaces + labels
+│       ├── data/                       # backing services (stands in for RDS + Amazon MQ)
 │       │   ├── orders-db/              # one Postgres per service PER ENV —
 │       │   │   ├── dev.yaml            # dev and prod never share a database
 │       │   │   └── prod.yaml
@@ -69,13 +69,13 @@ k8s-helm-event-driven-microservices/
 │       │   └── rabbitmq/               # official image + STOMP plugins
 │       │       ├── dev.yaml
 │       │       └── prod.yaml
-│       ├── dev/                  # dev-only cluster config
+│       ├── dev/                        # dev-only cluster config
 │       │   └── externalnames.yaml      # ExternalName Services -> data tier
-│       └── prod/                 # prod-only cluster config
+│       └── prod/                       # prod-only cluster config
 │           ├── externalnames.yaml
 │           ├── network-policy.yaml     # restrict cross-namespace traffic
 │           └── resource-quota.yaml     # cap prod namespace resources
-└── argocd/                       # Argo Applications (one per service × env)
+└── argocd/                             # Argo Applications (one per service × env)
     ├── order-service/
     │   ├── dev.yaml
     │   └── prod.yaml
