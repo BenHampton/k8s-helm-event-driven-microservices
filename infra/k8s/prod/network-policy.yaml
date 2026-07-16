@@ -1,0 +1,33 @@
+# default-deny: no ingress to any pod unless another policy allows it
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: prod
+spec:
+  podSelector: {} # all pods
+  policyTypes:
+    - Ingress
+
+---
+
+# allow ui -> order-service on 8080
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ui-to-order
+  namespace: prod
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: order-service
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ui
+      ports:
+        - protocol: TCP
+          port: 8080

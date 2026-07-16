@@ -183,6 +183,14 @@ Helm chart.
   - `k apply -f infra/k8s/prod/resource-quota.yaml`
 - Set up Argo
   - see Argo's section
+    - if already set up `k apply -R -f argocd/` 
+      - deploys all six apps - dev and prod (three services each)
+
+#### Apply To Specific Environment
+- DEV
+  - `k apply -f argocd/order-service/dev.yaml -f argocd/notification-service/dev.yaml -f argocd/ui/dev.yaml`
+- PROD
+  - `k apply -f argocd/order-service/prod.yaml -f argocd/notification-service/prod.yaml -f argocd/ui/prod.yaml`
 
 ### Start Locally
 - start apps
@@ -278,12 +286,33 @@ Helm chart.
 
 ## Clean Up
 
-### Delete Argo Cascades, removes everything
-- namespace: order-service, notification-service, ui (pods, Services, Secrets)
-```bash
+### Delete All Namespaces
+- `k delete namespace dev prod data argocd`
 
+### Delete Persistent Volume
+- delete all
+- `kubectl delete pv --all`
+- Delete by `name`
+  - Get PVs: `kubectl get pv`
+  - `kubectl delete pv <name1> <name2>`
+
+### Delete Argo Cascades
+- Deletes namespace
+  - order-service, notification-service, ui (pods, Services, Secrets)
+```bash
+k delete -R -f argocd/ --ignore-not-found
+
+k delete namespace dev prod data
+
+k delete namespace argocd
+```
+
+### Delete Argo For Specific Environment
+```bash
+# delete Dev only
 kubectl delete -f argocd/order-service/dev.yaml -f argocd/notification-service/dev.yaml -f argocd/ui/dev.yaml
 
+# delete Prod only
 kubectl delete -f argocd/order-service/prod.yaml -f argocd/notification-service/prod.yaml -f argocd/ui/prod.yaml
 
 ```
