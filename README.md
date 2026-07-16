@@ -8,7 +8,7 @@ ExternalName Services sit between the app and its infrastructure, so moving a da
 Prod is a real boundary: restricted Pod Security, default-deny networking, resource quotas. 
 Argo CD reconciles everything from Git, so the cluster is whatever the repo says — and shipping to prod means committing a version, not running a deploy.
 
-## Prerequisites
+# Prerequisites
 - JDK 21
 - Node 24
 - Docker
@@ -29,7 +29,7 @@ Argo CD reconciles everything from Git, so the cluster is whatever the repo says
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```ignorelang
 k8s-helm-event-driven-microservices/
@@ -86,7 +86,7 @@ k8s-helm-event-driven-microservices/
 
 ---
 
-## Architecture
+#Architecture
 
 - Five moving parts, two clean boundaries. Read this diagram before writing a line of code — every later stage is just making one piece of it real.
 ```
@@ -166,9 +166,9 @@ Helm chart.
 
 ---
 
-## Run Application
+# Run Application
 
-### Infrastructure Setup
+## Minikube Infrastructure Setup
 - Create Namespaces (dev/prod/data)
   - `k apply -f infra/k8s/namespaces.yaml`
 - Create Data Tier (data)
@@ -192,11 +192,11 @@ Helm chart.
 - PROD
   - `k apply -f argocd/order-service/prod.yaml -f argocd/notification-service/prod.yaml -f argocd/ui/prod.yaml`
 
-### Start Locally
+## Start Locally
 - start apps
   - `docker compose` or `locally`
 
-### Local Service Ports
+#### Local Service Ports
 - ui
   - `localhost:3000`
 - order-service
@@ -210,7 +210,7 @@ Helm chart.
   - http://localhost:15672/#/
   - guest/guest
 
-### Port-Forward
+#### Port-Forward
 - ui
   - `k -n dev port-forward svc/ui 8081:8080`
 - order-service
@@ -224,7 +224,7 @@ Helm chart.
 
 ---
 
-## Docker
+# Docker
 - point Docker at minikube's daemon so images are visible to the cluster (Section 10):
   - `eval $(minikube docker-env)`
 - Build Docker Files
@@ -234,7 +234,7 @@ Helm chart.
 
 ---
 
-## Docker Compose
+# Docker Compose
 - build both service JARs (runs tests too):
   - `mvn -f order-service/pom.xml clean package`
   - `mvn -f notification-service/pom.xml clean package`
@@ -243,7 +243,7 @@ Helm chart.
 
 ---
 
-## Minikube
+# Minikube
 - start
   - `minikube start --cpus=4 --memory=7000 --cni=calico --kubernetes-version=stable`
     - `--cni=calico`: minikube's default CNI ignores NetworkPolicies — without this,
@@ -251,13 +251,13 @@ Helm chart.
 
 ---
 
-## Helm
+# Helm
 - install into the dev namespace:
   - helm install order-service ./order-service/helm -n dev
 
 ---
 
-## Argo
+# Argo
 
 ### Setup
 - create namespace
@@ -284,7 +284,7 @@ Helm chart.
 
 ---
 
-## Clean Up
+# Clean Up
 
 ### Delete All Namespaces
 - `k delete namespace dev prod data argocd`
