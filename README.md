@@ -261,7 +261,7 @@ Helm chart.
 ---
 
 # Docker
-- point Docker at minikube's daemon so images are visible to the cluster (Section 10):
+- point Docker at minikube's daemon so images are visible to the cluster:
   - `eval $(minikube docker-env)`
 - Build Docker Files
   - `docker build -t order-service:0.1.0 ./order-service`
