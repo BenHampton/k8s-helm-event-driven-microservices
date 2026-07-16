@@ -39,7 +39,7 @@ k8s-helm-event-driven-microservices/
 ├── order-service/               # ── standalone microservice ──
 │   ├── pom.xml
 │   ├── mvnw, mvnw.cmd, .mvn/
-│   ├── Dockerfile               # slim: copies pre-built target/app.jar
+│   ├── Dockerfile               
 │   ├── src/main/java/com/k8sdemo/order/...
 │   ├── src/main/resources/
 │   │   ├── application.yaml
