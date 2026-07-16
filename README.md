@@ -18,9 +18,6 @@ Argo CD reconciles everything from Git, so the cluster is whatever the repo says
 - kubectl
 - helm
 - minikube
-- minikube addons:
-    - `minikube addons enable ingress`: nginx ingress controller for the web UI
-    - `minikube addons enable metrics-server`: for kubectl top + HPA later
 - need the following if running locally:
   - maven
   - postgres
@@ -35,11 +32,11 @@ Argo CD reconciles everything from Git, so the cluster is whatever the repo says
 k8s-helm-event-driven-microservices/
 ├── docker-compose.yml          # local dev: all services + rabbit + postgres
 ├── README.md
-├── .github/workflows/          # all CI lives at the repo ROOT 
+├── .github/workflows/          # ── all CI lives at the repo ROOT ──
 │   ├── order-service.yml        # path-filtered to order-service/**
 │   ├── notification-service.yml # path-filtered to notification-service/**
 │   └── ui.yml                  # path-filtered to ui/**
-├── order-service/              # standalone microservice 
+├── order-service/              # ── standalone microservice ──
 │   ├── pom.xml
 │   ├── mvnw, mvnw.cmd, .mvn/
 │   ├── Dockerfile               # slim: copies pre-built target/app.jar
@@ -51,21 +48,27 @@ k8s-helm-event-driven-microservices/
 │   │   ├── application-prod.yaml
 │   │   └── db/changelog/        # Liquibase changelogs
 │   └── helm/                    # its OWN chart
-├── notification-service/        # standalone microservice 
+├── notification-service/        # ── standalone microservice ──
 │   └── (same shape as order-service)
-├── ui/                         # standalone microservice 
+├── ui/                         # ── standalone microservice ──
 │   ├── package.json
 │   ├── vite.config.ts
 │   ├── src/
 │   ├── Dockerfile               # multi-stage: node build -> nginx
 │   └── helm/
-├── infra/                      # cluster setup: raw manifests you kubectl apply
+├── infra/                      # ── cluster setup: raw manifests you kubectl apply ──
 │   └── k8s/
 │       ├── namespaces.yaml      # dev / prod / data namespaces + labels
 │       ├── data/                # backing services (stands in for RDS + Amazon MQ)
-│       │   ├── orders-db.yaml         # Postgres for order-service
-│       │   ├── notifications-db.yaml  # Postgres for notification-service
-│       │   └── rabbitmq.yaml          # official image + STOMP plugins
+│       │   ├── orders-db/             # one Postgres per service PER ENV —
+│       │   │   ├── dev.yaml            # dev and prod never share a database
+│       │   │   └── prod.yaml
+│       │   ├── notifications-db/
+│       │   │   ├── dev.yaml
+│       │   │   └── prod.yaml
+│       │   └── rabbitmq/               # official image + STOMP plugins
+│       │       ├── dev.yaml
+│       │       └── prod.yaml
 │       ├── dev/                 # dev-only cluster config
 │       │   └── externalnames.yaml     # ExternalName Services -> data tier
 │       └── prod/                # prod-only cluster config
@@ -86,7 +89,7 @@ k8s-helm-event-driven-microservices/
 
 ---
 
-#Architecture
+# Architecture
 
 - Five moving parts, two clean boundaries. Read this diagram before writing a line of code — every later stage is just making one piece of it real.
 ```
@@ -117,6 +120,9 @@ k8s-helm-event-driven-microservices/
 └───────────────────────────────────────────────────────────────────────────────────────┘
 
   PENDING ──▶ OrderCreated ──▶ SENT ──▶ NotificationSent ──▶ NOTIFIED
+  
+  orders-db / notifications-db / rabbitmq are ExternalName aliases. Each
+  namespace resolves them to its own backend: dev → *-dev, prod → *-prod.
 ```
 
 **order-service** — Spring Boot REST API. Accepts orders, persists to its own
@@ -155,8 +161,11 @@ and owns its own decision — that's a *choreographed* saga.
 
 Two properties fall out of it:
 
-- **Database-per-service.** Two Postgres instances, no shared tables. If they
-  shared a database they'd be one deployable pretending to be two.
+- **Database-per-service.** Each service owns its own Postgres — and each
+  environment owns its own pair, so `data` holds four. No shared tables
+  anywhere. If two services shared a database they'd be one deployable
+  pretending to be two; if dev and prod shared one, a test fixture would be
+  production data.
 - **No direct calls.** order-service doesn't know notification-service exists.
   Kill the consumer, place an order — the order still succeeds, and the
   notification happens whenever it comes back. The broker is all they share.
@@ -168,29 +177,36 @@ Helm chart.
 
 # Run Application
 
+## Minikube
+- start
+  - `minikube start --cpus=4 --memory=7000 --cni=calico --kubernetes-version=stable`
+    - `--cni=calico`: minikube's default CNI ignores NetworkPolicies — without this,
+      `prod/network-policy.yaml` applies cleanly and enforces nothing
+- addons
+  - `minikube addons enable ingress`: nginx ingress controller for the web UI
+  - `minikube addons enable metrics-server`: for kubectl top + HPA later
+
 ## Minikube Infrastructure Setup
 - Create Namespaces (dev/prod/data)
   - `k apply -f infra/k8s/namespaces.yaml`
+  - verify: `k get namespace`
 - Create Data Tier (data)
-  - `k apply -f infra/k8s/data/orders-db.yaml`
-  - `k apply -f infra/k8s/data/notifications-db.yaml`
-  - `k apply -f infra/k8s/data/rabbitmq.yaml`
+  - `k apply -R -f infra/k8s/data/`
+  - verify: `k -n data get pods,svc,pvc`
 - Create ExternalNames (dev/prod → data)
   - `k apply -f infra/k8s/dev/externalnames.yaml`
   - `k apply -f infra/k8s/prod/externalnames.yaml`
-- Create Prod-only policies
+  - verify: `kubectl -n <namespace> get svc`
+- (Prod Only) - Create Prod-only policies
   - `k apply -f infra/k8s/prod/network-policy.yaml`
   - `k apply -f infra/k8s/prod/resource-quota.yaml`
-- Set up Argo
-  - see Argo's section
-    - if already set up `k apply -R -f argocd/` 
-      - deploys all six apps - dev and prod (three services each)
-
-#### Apply To Specific Environment
-- DEV
-  - `k apply -f argocd/order-service/dev.yaml -f argocd/notification-service/dev.yaml -f argocd/ui/dev.yaml`
-- PROD
-  - `k apply -f argocd/order-service/prod.yaml -f argocd/notification-service/prod.yaml -f argocd/ui/prod.yaml`
+- Create Services In Argo
+***IMPORTANT*** see Argo's section if you have not set it up yet
+  - `k apply -R -f argocd/` 
+  - verify: `kubectl -n argocd get applications`
+  - deploys all six apps - dev and prod (three services each)
+- Verify Everything is Configured
+  - `k -n <namespace> get pods,svc,pvc`
 
 ## Start Locally
 - start apps
@@ -222,6 +238,26 @@ Helm chart.
 - grafana
   - `k -n monitoring port-forward svc/monitoring-grafana 3001:80`
 
+#### Apply To Specific Environment
+- DEV
+  - Data Tiers
+    - `k apply -f infra/k8s/data/orders-db/dev.yaml`
+    - `k apply -f infra/k8s/data/notifications-db/dev.yaml`
+    - `k apply -f infra/k8s/data/rabbitmq/dev.yaml`
+  - ExternalNames
+    - `k apply -f infra/k8s/dev/externalnames.yaml`
+  - Argo
+    - `k apply -f argocd/order-service/dev.yaml -f argocd/notification-service/dev.yaml -f argocd/ui/dev.yaml`
+- PROD
+  - Data Tiers
+    - `k apply -f infra/k8s/data/orders-db/prod.yaml`
+    - `k apply -f infra/k8s/data/notifications-db/prod.yaml`
+    - `k apply -f infra/k8s/data/rabbitmq/prod.yaml`
+  - ExternalNames
+    - `k apply -f infra/k8s/prod/externalnames.yaml`
+  - Argo
+    - `k apply -f argocd/order-service/prod.yaml -f argocd/notification-service/prod.yaml -f argocd/ui/prod.yaml`
+
 ---
 
 # Docker
@@ -235,7 +271,7 @@ Helm chart.
 ---
 
 # Docker Compose
-- build both service JARs (runs tests too):
+- build both service JARs (ui's builds itself):
   - `mvn -f order-service/pom.xml clean package`
   - `mvn -f notification-service/pom.xml clean package`
 - start up:
@@ -243,17 +279,44 @@ Helm chart.
 
 ---
 
-# Minikube
-- start
-  - `minikube start --cpus=4 --memory=7000 --cni=calico --kubernetes-version=stable`
-    - `--cni=calico`: minikube's default CNI ignores NetworkPolicies — without this,
-        `prod/network-policy.yaml` applies cleanly and enforces nothing
-
----
-
 # Helm
-- install into the dev namespace:
-  - helm install order-service ./order-service/helm -n dev
+
+## Install to dev
+- `helm install order-service ./order-service/helm -n dev`
+- `helm install notification-service ./notification-service/helm -n dev`
+- `helm install ui ./ui/helm -n dev`
+- verify: `k -n dev get pods`
+
+## Install to prod
+Same charts, `values-prod.yaml` layered on top. The prod overlays pin image
+SHAs — override with `--set image.tag=latest` if those aren't in your registry.
+- `helm install order-service ./order-service/helm -n prod -f ./order-service/helm/values-prod.yaml`
+- `helm install notification-service ./notification-service/helm -n prod -f ./notification-service/helm/values-prod.yaml`
+- `helm install ui ./ui/helm -n prod -f ./ui/helm/values-prod.yaml`
+
+## Inspect before installing
+- render without applying: `helm template order-service ./order-service/helm`
+- with the prod overlay: `helm template order-service ./order-service/helm -f ./order-service/helm/values-prod.yaml`
+- dry run against the cluster: `helm install order-service ./order-service/helm -n dev --dry-run`
+- lint: `helm lint ./order-service/helm`
+
+## Upgrade
+- `helm upgrade order-service ./order-service/helm -n dev`
+- create-or-update in one command: `helm upgrade --install order-service ./order-service/helm -n dev`
+- wait for healthy, roll back on failure: `helm upgrade --install order-service ./order-service/helm -n dev --wait --atomic`
+
+## Inspect what's installed
+- `helm list -n dev`
+- `helm get values order-service -n dev`
+- `helm get manifest order-service -n dev`
+- `helm history order-service -n dev`
+
+## Roll back
+- `helm rollback order-service -n dev`          # previous revision
+- `helm rollback order-service 3 -n dev`        # a specific one
+
+## Uninstall
+- `helm uninstall order-service notification-service ui -n dev`
 
 ---
 
@@ -284,35 +347,78 @@ Helm chart.
 
 ---
 
-# Clean Up
+# Clean Up Cluster
 
-### Delete All Namespaces
-- `k delete namespace dev prod data argocd`
-
-### Delete Persistent Volume
-- delete all
-- `kubectl delete pv --all`
-- Delete by `name`
-  - Get PVs: `kubectl get pv`
-  - `kubectl delete pv <name1> <name2>`
-
-### Delete Argo Cascades
-- Deletes namespace
-  - order-service, notification-service, ui (pods, Services, Secrets)
+### Delete All (dev/prod)
 ```bash
-k delete -R -f argocd/ --ignore-not-found
 
-k delete namespace dev prod data
+# Delete the Argo Applications - Argo cascades, removes the Pods, Services, and Secrets it deployed
+k delete -R -f argocd/                    
 
+# Delete backends - they live in the `data` namespace
+k delete -R -f infra/k8s/data/           
+
+# Delete Persistent Volume - PVCs outlive their StatefulSet by design, data is supposed to survive the workloads
+k -n data delete pvc --all                
+
+# Delete namespaces
+k delete namespace dev prod               
+
+# Argo stays up. To remove it too: 
 k delete namespace argocd
+
 ```
 
-### Delete Argo For Specific Environment
+### Verify Delete
 ```bash
-# delete Dev only
-kubectl delete -f argocd/order-service/dev.yaml -f argocd/notification-service/dev.yaml -f argocd/ui/dev.yaml
+# no dev, no prod (data remains unless you delete it)
+k get ns                
 
-# delete Prod only
+# only kube-system and ingress-nginx                  
+k get pods -A                       
+
+# empty      
+k get pv                                 
+```
+
+### Delete Per Environment
+- DEV
+```bash
+
+# Delete namespace - order-service, notification-service, ui (pods, Services, Secrets)
+kubectl delete -f argocd/order-service/dev.yaml \
+               -f argocd/notification-service/dev.yaml \
+               -f argocd/ui/dev.yaml
+
+# Delete backends - they live in the `data` namespace
+k delete -f infra/k8s/data/orders-db/dev.yaml \
+               -f infra/k8s/data/notifications-db/dev.yaml \
+               -f infra/k8s/data/rabbitmq/dev.yaml
+
+kubectl -n data delete pvc -l app=orders-db-dev
+kubectl -n data delete pvc -l app=notifications-db-dev
+kubectl -n data delete pvc -l app=rabbitmq-dev
+
+kubectl delete namespace dev
+
+```
+
+- PROD
+```bash
+
 kubectl delete -f argocd/order-service/prod.yaml -f argocd/notification-service/prod.yaml -f argocd/ui/prod.yaml
 
+kubectl delete -f infra/k8s/data/orders-db/prod.yaml -f infra/k8s/data/notifications-db/prod.yaml -f infra/k8s/data/rabbitmq/prod.yaml
+
+kubectl -n data delete pvc -l app=orders-db-prod
+kubectl -n data delete pvc -l app=notifications-db-prod
+kubectl -n data delete pvc -l app=rabbitmq-prod
+
+kubectl delete namespace prod
+
 ```
+
+# Scripts
+- run: `./latest-dockerhub-tags.sh`
+- Prints the newest image tag on Docker Hub for each service next to what `values-prod.yaml` pins, so you don't have to check three repos by hand.
+- use flag `--bump` rewrites the values files to the newest tags — review the diff, commit, and Argo deploys.
