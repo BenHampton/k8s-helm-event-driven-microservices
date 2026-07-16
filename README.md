@@ -177,7 +177,7 @@ Helm chart.
 
 # Run Application
 
-## Minikube
+### Minikube
 - start
   - `minikube start --cpus=4 --memory=7000 --cni=calico --kubernetes-version=stable`
     - `--cni=calico`: minikube's default CNI ignores NetworkPolicies — without this,
@@ -186,7 +186,7 @@ Helm chart.
   - `minikube addons enable ingress`: nginx ingress controller for the web UI
   - `minikube addons enable metrics-server`: for kubectl top + HPA later
 
-## Minikube Infrastructure Setup
+### Minikube Infrastructure Setup
 - Create Namespaces (dev/prod/data)
   - `k apply -f infra/k8s/namespaces.yaml`
   - verify: `k get namespace`
@@ -208,7 +208,7 @@ Helm chart.
 - Verify Everything is Configured
   - `k -n <namespace> get pods,svc,pvc`
 
-## Start Locally
+### Start Locally
 - start apps
   - `docker compose` or `locally`
 
@@ -281,41 +281,41 @@ Helm chart.
 
 # Helm
 
-## Install to dev
+### Install to dev
 - `helm install order-service ./order-service/helm -n dev`
 - `helm install notification-service ./notification-service/helm -n dev`
 - `helm install ui ./ui/helm -n dev`
 - verify: `k -n dev get pods`
 
-## Install to prod
+### Install to prod
 Same charts, `values-prod.yaml` layered on top. The prod overlays pin image
 SHAs — override with `--set image.tag=latest` if those aren't in your registry.
 - `helm install order-service ./order-service/helm -n prod -f ./order-service/helm/values-prod.yaml`
 - `helm install notification-service ./notification-service/helm -n prod -f ./notification-service/helm/values-prod.yaml`
 - `helm install ui ./ui/helm -n prod -f ./ui/helm/values-prod.yaml`
 
-## Inspect before installing
+### Inspect before installing
 - render without applying: `helm template order-service ./order-service/helm`
 - with the prod overlay: `helm template order-service ./order-service/helm -f ./order-service/helm/values-prod.yaml`
 - dry run against the cluster: `helm install order-service ./order-service/helm -n dev --dry-run`
 - lint: `helm lint ./order-service/helm`
 
-## Upgrade
+### Upgrade
 - `helm upgrade order-service ./order-service/helm -n dev`
 - create-or-update in one command: `helm upgrade --install order-service ./order-service/helm -n dev`
 - wait for healthy, roll back on failure: `helm upgrade --install order-service ./order-service/helm -n dev --wait --atomic`
 
-## Inspect what's installed
+### Inspect what's installed
 - `helm list -n dev`
 - `helm get values order-service -n dev`
 - `helm get manifest order-service -n dev`
 - `helm history order-service -n dev`
 
-## Roll back
+### Roll back
 - `helm rollback order-service -n dev`          # previous revision
 - `helm rollback order-service 3 -n dev`        # a specific one
 
-## Uninstall
+### Uninstall
 - `helm uninstall order-service notification-service ui -n dev`
 
 ---
