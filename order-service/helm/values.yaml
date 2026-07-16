@@ -5,7 +5,7 @@ profile: dev
 
 image:
   repository: docker.io/bhampton29/order-service
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: latest
 
 service:

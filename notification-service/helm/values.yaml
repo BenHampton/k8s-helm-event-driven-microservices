@@ -4,7 +4,7 @@ profile: dev
 
 image:
   repository: docker.io/bhampton29/notification-service
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   tag: latest
 
 service:
