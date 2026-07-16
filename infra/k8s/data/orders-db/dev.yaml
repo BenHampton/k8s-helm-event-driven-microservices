@@ -1,44 +1,44 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: notifications-db-credentials
+  name: orders-db-dev-credentials
   namespace: data
 type: Opaque
-stringData:
-  POSTGRES_DB: "notifications"
-  POSTGRES_USER: "notifications"
-  POSTGRES_PASSWORD: "notifications"
+stringData: # everything is local - real world we'd use a secret manager
+  POSTGRES_DB: "orders"
+  POSTGRES_USER: "orders"
+  POSTGRES_PASSWORD: "orders"
 
 ---
 
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: notifications-db
+  name: orders-db-dev
   namespace: data
 spec:
-  serviceName: notifications-db
+  serviceName: orders-db-dev
   selector:
     matchLabels:
-      app: notifications-db
+      app: orders-db-dev
   template:
     metadata:
       labels:
-        app: notifications-db
+        app: orders-db-dev
     spec:
       containers:
         - name: postgres
           image: postgres:17-alpine
           envFrom:
             - secretRef:
-                name: notifications-db-credentials
+                name: orders-db-dev-credentials
           ports:
             - containerPort: 5432
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
           readinessProbe:
-            exec: { command: ["pg_isready", "-U", "notifications"] }
+            exec: { command: ["pg_isready", "-U", "orders"] }
             initialDelaySeconds: 5
   volumeClaimTemplates:
     - metadata:
@@ -54,11 +54,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: notifications-db
+  name: orders-db-dev
   namespace: data
 spec:
   clusterIP: None
   selector:
-    app: notifications-db
+    app: orders-db-dev
   ports:
     - port: 5423

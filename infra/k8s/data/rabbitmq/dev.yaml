@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-dev-plugins
+  namespace: data
+data:
+  # STOMP + web-STOMP let browsers subscribe over WebSocket (real-time UI).
+  enabled_plugins: |
+    [rabbitmq_management,rabbitmq_prometheus,rabbitmq_stomp,rabbitmq_web_stomp].
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-dev
+  namespace: data
+spec:
+  selector:
+    app: rabbitmq-dev
+  ports:
+    - { name: amqp,     port: 5672,  targetPort: 5672 }   # the app's connection
+    - { name: mgmt,     port: 15672, targetPort: 15672 }  # management UI
+    - { name: stomp,    port: 61613, targetPort: 61613 }  # native STOMP
+    - { name: webstomp, port: 15674, targetPort: 15674 }  # STOMP over WebSocket
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq-dev
+  namespace: data
+spec:
+  serviceName: rabbitmq-dev
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq-dev
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-dev
+    spec:
+      containers:
+        - name: rabbitmq
+          # OFFICIAL image, maintained by the RabbitMQ project itself.
+          image: rabbitmq:4-management-alpine
+          ports:
+            - { containerPort: 5672 }
+            - { containerPort: 15672 }
+            - { containerPort: 61613 }
+            - { containerPort: 15674 }
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: guest
+            - name: RABBITMQ_DEFAULT_PASS
+              value: guest
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/rabbitmq
+            - name: plugins
+              mountPath: /etc/rabbitmq/enabled_plugins
+              subPath: enabled_plugins
+          readinessProbe:
+            exec: { command: ["rabbitmq-diagnostics", "check_port_connectivity"] }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+      volumes:
+        - name: plugins
+          configMap:
+            name: rabbitmq-dev-plugins
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
